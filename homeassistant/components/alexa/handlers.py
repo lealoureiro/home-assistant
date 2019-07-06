@@ -54,17 +54,7 @@ async def async_api_discovery(hass, config, directive, context):
     Async friendly.
     """
     discovery_endpoints = [
-        {
-            'displayCategories': alexa_entity.display_categories(),
-            'cookie': {},
-            'endpointId': alexa_entity.alexa_id(),
-            'friendlyName': alexa_entity.friendly_name(),
-            'description': alexa_entity.description(),
-            'manufacturerName': 'Home Assistant',
-            'capabilities': [
-                i.serialize_discovery() for i in alexa_entity.interfaces()
-            ]
-        }
+        alexa_entity.serialize_discovery()
         for alexa_entity in async_get_entities(hass, config)
         if config.should_expose(alexa_entity.entity_id)
     ]
@@ -87,7 +77,9 @@ async def async_api_accept_grant(hass, config, directive, context):
 
     if config.supports_auth:
         await config.async_accept_grant(auth_code)
-        await async_enable_proactive_mode(hass, config)
+
+        if config.should_report_state:
+            await async_enable_proactive_mode(hass, config)
 
     return directive.response(
         name='AcceptGrant.Response',
